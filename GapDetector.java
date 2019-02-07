@@ -9,10 +9,10 @@ public class GapDetector
 	{
 		
 		System.out.println("Welcome to the Gap Detection Program");
-		@SuppressWarnings("resource")
 		Scanner kb = new Scanner(System.in);
 		System.out.println("Enter the name of the file to read");
 		String answer1 = kb.nextLine();
+		kb.close();
 		String answer2 = "output.txt";
 		boolean answer3 = true;
 		System.out.println("Starting read");
@@ -39,6 +39,11 @@ public class GapDetector
 			int startHour = 0, startMinute = 0, startSecond = 0, endHour = 0, endMinute = 0, endSecond = 0;
 			while((line = br.readLine())!=null)
 			{
+				if(line.equalsIgnoreCase(""))
+				{
+					System.out.println("bad tings man");
+					break;
+				}
 				String[] column = line.split(":");
 				if(column.length > 3)
 					break;
@@ -60,6 +65,7 @@ public class GapDetector
 					endHour = currHour;
 					endMinute = currMinute;
 					endSecond = currSecond;
+					//System.out.println("hr " + currHour + " min " + currMinute + " sec "+ currSecond); //Uncomment for debugging
 					if(currHour == lastHour) //hour is the same
 					{
 						if(lastMinute == currMinute) //minute is the same
@@ -174,12 +180,20 @@ public class GapDetector
 			int min = runtimeInSec / 60;
 			runtimeInSec -= min*60;
 			
-			avgGapLength /= numGaps;
-			avgGapLength = round(avgGapLength,2);
+			if(numGaps != 0)
+			{
+				avgGapLength /= numGaps;
+				avgGapLength = round(avgGapLength,2);
+			}
+			else
+			{
+				avgGapLength = 0;
+			}
 			bw.write("Runtime: " + hour + " Hours " + min + " Minutes "  + runtimeInSec + " Seconds. " + "Number of Gaps: " + numGaps + ". Average Gap Length: "+avgGapLength+ " seconds\n");
 			double comp =  ((logtime - avgGapLength*numGaps) / logtime);
+			comp *= 100;
 			comp = round(comp,2);
-			bw.write("Completeness of data: " + comp*100 + "%");
+			bw.write("Completeness of data: " + comp + "%");
 			System.out.println("finished");
 			br.close();
 			bw.close();
@@ -211,9 +225,20 @@ public class GapDetector
 						gapLength += (eS-sS);
 				}
 			}
-			else if(sH == 12 && eH == 1)
+			else if(sH == 12 && eH == 1) //deals with midnight
 			{
 				gapLength += 3600;
+				if(sM != eM)
+				{
+					gapLength += (60*(eM-sM));
+					if(eS != sS)
+						gapLength += (eS-sS);
+				}
+			}
+			else if(eH < sH) //ends "before it starts" ex: start hour 17, end hour = 3
+			{ 
+				gapLength += (60*60*(24-sH)); 
+				gapLength += (60*60*(eH)); 
 				if(sM != eM)
 				{
 					gapLength += (60*(eM-sM));
