@@ -1,7 +1,10 @@
 import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Scanner;
 public class GapDetector
 {
@@ -12,17 +15,23 @@ public class GapDetector
 		Scanner kb = new Scanner(System.in);
 		System.out.println("Enter the name of the file to read");
 		String answer1 = kb.nextLine();
+		System.out.println("Do you need to convert the Microsecond time to Date Format?");
+		String answer2 = kb.nextLine();
 		kb.close();
-		String answer2 = "output.txt";
-		boolean answer3 = true;
-		System.out.println("Starting read");
-		ArrayList<String> arr = new ArrayList<String>(); 
-		arr = readF(answer1,answer2,answer3);
-		for(int i=0;i<arr.size();i++)
+		if(answer2.equalsIgnoreCase("yes"))
 		{
-			System.out.println("Gap at "+arr.get(i));
+			MStoDateFormatFile(answer1,"tmp.txt");
 		}
-		
+		else
+		{
+			System.out.println("Starting read");
+			ArrayList<String> arr = new ArrayList<String>();
+			arr = readF(answer1,"output.txt",true);
+			for(int i=0;i<arr.size();i++)
+			{
+				System.out.println("Gap at "+arr.get(i));
+			}
+		}
 	}
 	public static ArrayList<String> readF(String fileName, String outputName,boolean micro)
 	{
@@ -41,7 +50,7 @@ public class GapDetector
 			{
 				if(line.equalsIgnoreCase(""))
 				{
-					System.out.println("bad tings man");
+					System.out.println("This should never happen.");
 					break;
 				}
 				String[] column = line.split(":");
@@ -264,5 +273,34 @@ public class GapDetector
 	    BigDecimal bd = new BigDecimal(value);
 	    bd = bd.setScale(places, RoundingMode.HALF_UP);
 	    return bd.doubleValue();
+	}
+	public static void MStoDateFormatFile(String fileName, String outputName)
+	{
+		try
+		{
+			DateFormat simple = new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS");
+			BufferedReader br = new BufferedReader(new FileReader(fileName));
+			BufferedWriter bw = new BufferedWriter(new FileWriter(outputName));
+			String line;
+			while((line = br.readLine())!=null)
+			{
+				double temp = Double.parseDouble(line);
+				Date result = new Date((long) temp); 
+				bw.write(simple.format(result)+"\n"); 
+			}
+			System.out.println("finished");
+			br.close();
+			bw.close();
+		}
+		catch(IOException e) //Exception data
+		{
+			System.out.println("Houston we had a problem");
+			System.out.println(e.getMessage());
+		}
+		catch(Exception e)
+		{
+			System.out.println("Houston we had a problem");
+			System.out.println(e.getMessage());
+		}
 	}
 }
